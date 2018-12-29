@@ -11,6 +11,7 @@ def scrap_pictures(scrapper):
 
 if __name__ == '__main__':
     path = sys.argv[1] if len(sys.argv) > 1 else None
+    thread_count = int(sys.argv[2]) if len(sys.argv) > 2 else 1
 
     if not os.path.exists(path):
         os.makedirs(path)
@@ -19,9 +20,10 @@ if __name__ == '__main__':
     threads = []
 
     try:
-        thread = Thread(target = scrap_pictures, args = (picture_scrapper,))
-        thread.start()
-        threads.append(thread)
+        for _ in range(thread_count):
+            thread = Thread(target = scrap_pictures, args = (picture_scrapper,))
+            thread.start()
+            threads.append(thread)
     except KeyboardInterrupt:
         for t in threads:
             t.join(1)
