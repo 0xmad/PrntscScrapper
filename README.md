@@ -2,4 +2,4 @@
 
 Requirements python 3
 
-Run `python main.py [image path] [number of threads]`
+Run `python main.py -p [image path] -t [number of threads]`
