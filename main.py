@@ -1,4 +1,5 @@
 import sys
+import getopt
 import os
 from threading import Thread
 
@@ -9,9 +10,34 @@ def scrap_pictures(scrapper):
         img = scrapper.generate_random_url()
         scrapper.scrape(img)
 
+def parse_command_line(argv):
+    try:
+        opts, args = getopt.getopt(argv, 'hp:t:', ['path=', 'threads='])
+
+        image_path, count = './images', 1
+
+        for opt, arg in opts:
+            if opt == '-h':
+                print()
+                print(
+                    'main.py -t <number of threads> -p <save path>',
+                    '-t (--threads=) - number of threads (default 1)',
+                    '-p (--path=) - path to save images (default ./image)',
+                    sep = '\n\t'
+                )
+                sys.exit()
+            elif opt in ('-p', '--path'):
+                image_path = arg
+            elif opt in ('-t', '--threads'):
+                count = int(arg)
+
+        return image_path, count
+    except (ValueError, getopt.GetoptError):
+        print('Error! See usage: main.py -h')
+        sys.exit(2)
+
 if __name__ == '__main__':
-    path = sys.argv[1] if len(sys.argv) > 1 else None
-    thread_count = int(sys.argv[2]) if len(sys.argv) > 2 else 1
+    path, thread_count = parse_command_line(sys.argv[1:])
 
     if not os.path.exists(path):
         os.makedirs(path)
