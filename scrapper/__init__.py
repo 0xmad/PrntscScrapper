@@ -15,13 +15,14 @@ class Scrapper:
             self.path = path
 
     def generate_random_url(self):
-        # 5 or 6 length for image id
-        amount = random.randint(5, 7)
+        possible_chars = string.ascii_uppercase + string.digits + string.ascii_lowercase
 
-        seed = string.ascii_uppercase + string.digits + string.ascii_lowercase
-        image_id = ''.join((random.choice(seed) for _ in range(amount)))
+        # id length 6 or 7
+        current_length = random.randint(6, 8)
 
-        return { 'url': f'{self.url}/{image_id}.jpg', 'name': f'{image_id}.jpg' }
+        slug = ''.join(random.choice(possible_chars) for _ in range(current_length))
+
+        return { 'url': f'{self.url}/{slug}.jpg', 'name': f'{slug}.jpg' }
 
     def scrape(self, img):
         try:
@@ -30,7 +31,7 @@ class Scrapper:
             file = os.path.getsize(filename)
 
             if file in self.empty_file_sizes:
-                print('[-] Invalid image url')
+                print(f'''[-] Invalid image url {img['url']}''')
                 os.remove(filename)
                 return 404
             else:
