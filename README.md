@@ -1,4 +1,4 @@
-# ImgurScrapper
+# PrntscrScrapper
 
 Requirements: 
 1) python 3 
