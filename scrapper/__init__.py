@@ -1,8 +1,6 @@
 import os
 import urllib.error
 import urllib.request
-import random
-import string
 
 from bs4 import BeautifulSoup
 
@@ -15,19 +13,18 @@ class Scrapper:
         if path is not None:
             self._path = path
 
-    def generate_random_url(self):
-        possible_chars = string.digits + string.ascii_lowercase
-        slug = ''.join(random.choice(possible_chars) for _ in range(6))
-
+    def generate_random_url(self, slug):
         return { 'url': f'{self._url}/{slug}.png', 'name': f'{slug}.png' }
 
     def scrape(self, img):
         try:
             filename = f'''{self._path}/{img['name']}'''
+
             fake_agent = 'Mozilla/5.0 (Windows NT 5.1; rv:43.0) Gecko/20100101 Firefox/43.0 '
             headers = {
-                'User-agent': fake_agent
+                'user-agent': fake_agent,
             }
+
             request = urllib.request.Request(
                 img['url'],
                 headers = headers,
@@ -40,7 +37,9 @@ class Scrapper:
 
             if image is not None:
                 src = image.get('src')
-                urllib.request.urlretrieve(src, filename)
+                opener = urllib.request.URLopener()
+                opener.addheader('User-Agent', fake_agent)
+                opener.retrieve(src, filename)
             else:
                 return 404
 

@@ -1,43 +1,58 @@
-import sys
-import getopt
 import os
+import string
+import argparse
 from threading import Thread
 
 from scrapper import Scrapper
 
-def scrap_pictures(scrapper):
+code_chars = list(string.ascii_lowercase) + list(string.digits)
+base = len(code_chars)
+
+def digit_to_char(digit):
+    if digit < 10:
+        return str(digit)
+    return chr(ord('a') + digit - 10)
+
+def str_base(number, chars):
+    if number < 0:
+        return '-' + str_base(-number, chars)
+    (d, m) = divmod(number, chars)
+    if d > 0:
+        return str_base(d, chars) + digit_to_char(m)
+    return digit_to_char(m)
+
+def next_code(curr_code, index):
+    code_next = int(curr_code, base)
+    return str_base(code_next + index + 1, base)
+
+def scrap_pictures(scrapper, current_code, thread_index):
     while True:
-        img = scrapper.generate_random_url()
+        current_code = next_code(current_code, thread_index)
+        img = scrapper.generate_random_url(current_code)
         scrapper.scrape(img)
 
-def parse_command_line(argv):
-    try:
-        opts, args = getopt.getopt(argv, 'hp:t:', ['path=', 'threads='])
+def parse_command_line():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '--path',
+        help = 'The path where images will be stored.',
+        default = './images'
+    )
+    parser.add_argument('--threads', help = 'The number of threads.', default = '1')
+    parser.add_argument(
+        '--code',
+        help = '6 character string made up of lowercase letters and numbers which is where the '
+               'scraper will start. e.g. abcdef -> abcdeg -> abcdeh',
+        default = 'm1llk1'
+    )
 
-        image_path, count = './images', 1
+    args = parser.parse_args()
+    image_path, count, arg_code = args.path, int(args.threads), args.code
 
-        for opt, arg in opts:
-            if opt == '-h':
-                print()
-                print(
-                    'main.py -t <number of threads> -p <save path>',
-                    '-t (--threads=) - number of threads (default 1)',
-                    '-p (--path=) - path to save images (default ./image)',
-                    sep = '\n\t'
-                )
-                sys.exit()
-            elif opt in ('-p', '--path'):
-                image_path = arg
-            elif opt in ('-t', '--threads'):
-                count = int(arg)
-
-        return image_path, count
-    except (ValueError, getopt.GetoptError):
-        print('Error! See usage: main.py -h')
-        sys.exit(2)
+    return image_path, count, arg_code
 
 if __name__ == '__main__':
-    path, thread_count = parse_command_line(sys.argv[1:])
+    path, thread_count, code = parse_command_line()
 
     if not os.path.exists(path):
         os.makedirs(path)
@@ -46,8 +61,8 @@ if __name__ == '__main__':
     threads = []
 
     try:
-        for _ in range(thread_count):
-            thread = Thread(target = scrap_pictures, args = (picture_scrapper,))
+        for i in range(thread_count):
+            thread = Thread(target = scrap_pictures, args = (picture_scrapper, code, i))
             thread.start()
             threads.append(thread)
     except KeyboardInterrupt:
