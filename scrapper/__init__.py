@@ -37,9 +37,12 @@ class Scrapper:
             html = response.read()
             soup = BeautifulSoup(str(html))
             image = soup.find(id = 'screenshot-image')
-            src = image.get('src')
 
-            urllib.request.urlretrieve(src, filename)
+            if image is not None:
+                src = image.get('src')
+                urllib.request.urlretrieve(src, filename)
+            else:
+                return 404
 
             file_size = os.path.getsize(filename)
 
