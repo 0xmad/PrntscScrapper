@@ -5,3 +5,7 @@ dist
 *.log
 *.jpg
 images
+pyvenv.cfg
+bin
+include
+lib

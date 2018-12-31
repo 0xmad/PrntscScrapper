@@ -1,44 +1,58 @@
 import os
-import random
-import string
 import urllib.error
 import urllib.request
+import random
+import string
+
+from bs4 import BeautifulSoup
 
 class Scrapper:
-    # need to define empty sizes if imgur doesn't have the image
-    empty_file_sizes = [0, 503, 4939, 4940, 4941, 12003, 5556]
-    url = 'https://i.imgur.com'
-    path = './images'
+    _empty_file_sizes = [0, 4275]
+    _url = 'https://prnt.sc'
+    _path = './images'
 
     def __init__(self, path):
         if path is not None:
-            self.path = path
+            self._path = path
 
     def generate_random_url(self):
-        possible_chars = string.ascii_uppercase + string.digits + string.ascii_lowercase
+        possible_chars = string.digits + string.ascii_lowercase
+        slug = ''.join(random.choice(possible_chars) for _ in range(6))
 
-        # id length 6 or 7
-        current_length = random.randint(6, 8)
-
-        slug = ''.join(random.choice(possible_chars) for _ in range(current_length))
-
-        return { 'url': f'{self.url}/{slug}.jpg', 'name': f'{slug}.jpg' }
+        return { 'url': f'{self._url}/{slug}.png', 'name': f'{slug}.png' }
 
     def scrape(self, img):
         try:
-            filename = f'''{self.path}/{img['name']}'''
-            urllib.request.urlretrieve(img['url'], filename)
-            file = os.path.getsize(filename)
+            filename = f'''{self._path}/{img['name']}'''
+            fake_agent = 'Mozilla/5.0 (Windows NT 5.1; rv:43.0) Gecko/20100101 Firefox/43.0 '
+            headers = {
+                'User-agent': fake_agent
+            }
+            request = urllib.request.Request(
+                img['url'],
+                headers = headers,
+            )
 
-            if file in self.empty_file_sizes:
+            response = urllib.request.urlopen(request)
+            html = response.read()
+            soup = BeautifulSoup(str(html))
+            image = soup.find(id = 'screenshot-image')
+            src = image.get('src')
+
+            urllib.request.urlretrieve(src, filename)
+
+            file_size = os.path.getsize(filename)
+
+            if file_size in self._empty_file_sizes:
                 print(f'''[-] Invalid image url {img['url']}''')
                 os.remove(filename)
                 return 404
             else:
                 print(f'''[+] Valid image url {img['url']}''')
-        except urllib.error.HTTPError:
-            return 404
-        except urllib.error.ContentTooShortError:
+        except urllib.error.HTTPError as e:
+            print(f'''[-] {e} - {img['url']}''')
+            return e.code
+        except (urllib.error.ContentTooShortError, ValueError):
             return 400
 
         return 200
