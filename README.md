@@ -1,4 +1,4 @@
-# PrntscrScrapper
+# PrntscScrapper
 
 Requirements: 
 1) python 3 
