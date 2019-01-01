@@ -32,7 +32,7 @@ class Scrapper:
 
             response = urllib.request.urlopen(request)
             html = response.read()
-            soup = BeautifulSoup(str(html))
+            soup = BeautifulSoup(str(html), 'html.parser')
             image = soup.find(id = 'screenshot-image')
 
             if image is not None:
